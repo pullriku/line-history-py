@@ -3,9 +3,12 @@ use pyo3::prelude::*;
 
 #[pyclass]
 pub struct LineContent {
-    pub date: chrono::NaiveDate,
-    pub line_count: usize,
-    pub line: String,
+    #[pyo3(get)]
+    date: chrono::NaiveDate,
+    #[pyo3(get)]
+    line_count: usize,
+    #[pyo3(get)]
+    line: String,
 }
 
 #[pymethods]

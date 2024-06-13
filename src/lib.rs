@@ -37,7 +37,7 @@ impl From<::line_history::line_content::LineContent> for LineContent {
 
 #[pyclass]
 struct History {
-    history: line_history::history::History,
+    history: ::line_history::history::History,
 }
 
 #[pymethods]
@@ -45,13 +45,13 @@ impl History {
     #[new]
     fn new(data: &str) -> Self {
         Self {
-            history: line_history::history::History::new(data),
+            history: ::line_history::history::History::new(data),
         }
     }
 
     #[staticmethod]
     fn read_from_file(path: &str) -> PyResult<Self> {
-        let Ok(history) = line_history::history::History::read_from_file(path) else {
+        let Ok(history) = ::line_history::history::History::read_from_file(path) else {
             return Err(PyOSError::new_err("Failed to read from file"));
         };
 
@@ -96,8 +96,8 @@ impl History {
 
 /// A Python module implemented in Rust.
 #[pymodule]
-fn line_history_py(m: &Bound<'_, PyModule>) -> PyResult<()> {
-    // m.add_function(wrap_pyfunction!(sum_as_string, m)?)?;
+fn line_history(m: &Bound<'_, PyModule>) -> PyResult<()> {
+    m.add_class::<LineContent>()?;
     m.add_class::<History>()?;
     Ok(())
 }

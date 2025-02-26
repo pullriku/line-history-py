@@ -1,11 +1,13 @@
 from __future__ import annotations
 from datetime import date, time
-from typing import Dict, List, Iterator, Optional, Tuple, Union
+from typing import Dict, List, Optional, Tuple
 
 class History:
     days: Dict[date, Day]
 
     def __init__(self, days: Dict[date, Day]) -> None: ...
+    @classmethod
+    def read_from_file(cls, file_path: str) -> History: ...
     @classmethod
     def from_text(cls, text: str) -> History: ...
     def days(self) -> Dict[date, Day]: ...

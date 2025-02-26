@@ -1,106 +1,152 @@
-use pyo3::exceptions::PyOSError;
+use std::collections::HashMap;
+
+use ::line_history::{
+    history::OwnedChat,
+    traits::{HistoryData, SearchByDate, SearchByKeyword, SearchByRandom},
+};
+use chrono::{NaiveDate, NaiveTime};
 use pyo3::prelude::*;
 
-#[pyclass]
-pub struct LineContent {
-    #[pyo3(get)]
-    date: chrono::NaiveDate,
-    #[pyo3(get)]
-    line_count: usize,
-    #[pyo3(get)]
-    line: String,
-}
-
-#[pymethods]
-impl LineContent {
-    #[new]
-    fn new(date: chrono::NaiveDate, line_count: usize, line: String) -> Self {
-        Self {
-            date,
-            line_count,
-            line,
-        }
-    }
-}
-
-impl From<::line_history::line_content::LineContent> for LineContent {
-    fn from(line_content: ::line_history::line_content::LineContent) -> Self {
-        let ::line_history::line_content::LineContent {
-            date,
-            line_count,
-            line,
-        } = line_content;
-        Self {
-            date,
-            line_count,
-            line,
-        }
-    }
-}
-
-#[pyclass]
-struct History {
-    history: ::line_history::history::History,
+#[pyclass(frozen)]
+pub struct History {
+    history: ::line_history::history::OwnedHistory,
 }
 
 #[pymethods]
 impl History {
     #[new]
-    fn new(data: &str) -> Self {
-        Self {
-            history: ::line_history::history::History::new(data),
+    fn new(days: HashMap<NaiveDate, Py<Day>>) -> Self {
+        let days = days
+            .iter()
+            .map(|(&date, day)| {
+                (date, day.get().day.as_ref_day())
+            });
+
+        History {
+            history: ::line_history::history::History::new(days.collect()).into_owned(),
         }
     }
 
     #[staticmethod]
-    fn read_from_file(path: &str) -> PyResult<Self> {
-        let Ok(history) = ::line_history::history::History::read_from_file(path) else {
-            return Err(PyOSError::new_err("Failed to read from file"));
-        };
+    pub fn read_from_file(path: String) -> Self {
+        ::line_history::read_from_file!(path,  let src, let history);
+        let history = ::line_history::history::ignore_errors(history);
 
-        Ok(Self { history })
+        Self { history: history.into() }
     }
 
     #[staticmethod]
-    fn from_lines(lines: Vec<String>) -> Self {
-        let result = ::line_history::history::History::from_lines(lines);
-        Self { history: result }
+    pub fn from_text(text: String) -> Self {
+        Self {
+            history: ::line_history::history::History::from_text(&text).into_owned(),
+        }
     }
 
-    fn len(&self) -> usize {
+    pub fn search_by_date(&self, date: NaiveDate) -> Option<Day> {
+        self.history
+            .search_by_date(&date)
+            .map(|owned_day| Day::from(owned_day.clone()))
+    }
+
+    pub fn search_by_keyword(&self, keyword: &str) -> Vec<(NaiveDate, Chat)> {
+        self.history
+            .search_by_keyword(keyword)
+            .map(|(date, owned_chat)| (date, Chat::from(owned_chat.clone())))
+            .collect()
+    }
+
+    pub fn search_by_random(&self) -> Day {
+        let day = self.history.search_by_random();
+        Day::from(day.clone())
+    }
+
+    pub fn days(&self) -> HashMap<NaiveDate, Day> {
+        self.history
+            .days()
+            .iter()
+            .map(|(&date, owned_day)| (date, Day::from(owned_day.clone())))
+            .collect()
+    }
+
+    pub fn len(&self) -> usize {
         self.history.len()
     }
 
-    fn is_empty(&self) -> bool {
+    pub fn is_empty(&self) -> bool {
         self.history.is_empty()
     }
+}
 
-    fn search_by_date(&self, date: chrono::NaiveDate) -> PyResult<Option<String>> {
-        let result = self.history.search_by_date(&date);
-        Ok(result)
+#[pyclass(frozen)]
+pub struct Day {
+    day: ::line_history::history::OwnedDay,
+}
+
+impl From<Day> for ::line_history::history::OwnedDay {
+    fn from(value: Day) -> Self {
+        value.day
+    }
+}
+
+impl From<::line_history::history::OwnedDay> for Day {
+    fn from(owned_day: ::line_history::history::OwnedDay) -> Self {
+        Day {
+            day: owned_day,
+        }
+    }
+}
+
+#[pymethods]
+impl Day {
+    pub fn date(&self) -> NaiveDate {
+        self.day.date
     }
 
-    fn search_by_keyword(&self, keyword: &str) -> PyResult<Vec<LineContent>> {
-        let result = self
-            .history
-            .search_by_keyword(keyword)
-            .into_iter()
-            .map(|line_content| line_content.into())
-            .collect();
-
-        Ok(result)
+    pub fn chats(&self) -> Vec<Chat> {
+        self.day.chats
+            .iter()
+            .map(|owned_chat| Chat::from(owned_chat.clone()))
+            .collect()
     }
 
-    fn search_by_random(&self) -> PyResult<String> {
-        let result = self.history.search_by_random();
-        Ok(result)
+    pub fn search_by_keyword(&self, keyword: &str) -> Vec<(NaiveDate, Chat)> {
+        self.day.search_by_keyword(keyword).map(|(date, owned_chat)| (date, Chat::from(owned_chat.clone()))).collect()
+    }
+}
+
+#[pyclass(frozen)]
+pub struct Chat {
+    chat: ::line_history::history::OwnedChat,
+}
+
+impl From<OwnedChat> for Chat {
+    fn from(owned_chat: OwnedChat) -> Self {
+        Chat {
+            chat: owned_chat,
+        }
+    }
+}
+
+#[pymethods]
+impl Chat {
+    pub fn time(&self) -> NaiveTime {
+        self.chat.time
+    }
+
+    pub fn speaker(&self) -> &Option<String> {
+        &self.chat.speaker
+    }
+
+    pub fn message_lines(&self) -> &Vec<String> {
+        &self.chat.message_lines
     }
 }
 
 /// A Python module implemented in Rust.
 #[pymodule]
 fn line_history(m: &Bound<'_, PyModule>) -> PyResult<()> {
-    m.add_class::<LineContent>()?;
     m.add_class::<History>()?;
+    m.add_class::<Day>()?;
+    m.add_class::<Chat>()?;
     Ok(())
 }

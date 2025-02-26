@@ -9,6 +9,6 @@ name = "line_history"
 crate-type = ["cdylib"]
 
 [dependencies]
-chrono = "0.4.38"
-line-history = { git = "https://github.com/TyomoGit/line-history-rs.git", version = "0.6.0" }
-pyo3 = { version = "0.21.1", features = ["chrono"] }
+chrono = "0.4.39"
+line-history = { git = "https://github.com/TyomoGit/line-history-rs.git", version = "0.13.0" }
+pyo3 = { version = "0.23.5", features = ["chrono"] }

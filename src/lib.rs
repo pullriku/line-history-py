@@ -6,12 +6,15 @@ use ::line_history::{
 };
 use chrono::{NaiveDate, NaiveTime};
 use pyo3::prelude::*;
+use pyo3_stub_gen::{define_stub_info_gatherer, derive::{gen_stub_pyclass, gen_stub_pymethods}};
 
+#[gen_stub_pyclass]
 #[pyclass(frozen)]
 pub struct History {
     history: ::line_history::history::OwnedHistory,
 }
 
+#[gen_stub_pymethods]
 #[pymethods]
 impl History {
     #[new]
@@ -77,6 +80,7 @@ impl History {
     }
 }
 
+#[gen_stub_pyclass]
 #[pyclass(frozen)]
 pub struct Day {
     day: ::line_history::history::OwnedDay,
@@ -96,6 +100,7 @@ impl From<::line_history::history::OwnedDay> for Day {
     }
 }
 
+#[gen_stub_pymethods]
 #[pymethods]
 impl Day {
     pub fn date(&self) -> NaiveDate {
@@ -114,6 +119,7 @@ impl Day {
     }
 }
 
+#[gen_stub_pyclass]
 #[pyclass(frozen)]
 pub struct Chat {
     chat: ::line_history::history::OwnedChat,
@@ -127,6 +133,7 @@ impl From<OwnedChat> for Chat {
     }
 }
 
+#[gen_stub_pymethods]
 #[pymethods]
 impl Chat {
     pub fn time(&self) -> NaiveTime {
@@ -150,3 +157,5 @@ fn line_history(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<Chat>()?;
     Ok(())
 }
+
+define_stub_info_gatherer!(stub_info);

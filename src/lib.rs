@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 
-use ::line_history::{
+use line_history_rs::traits::SearchByKeywordResult;
+use ::line_history_rs::{
     history::OwnedChat,
     traits::{HistoryData, SearchByDate, SearchByKeyword, SearchByRandom},
 };
@@ -11,7 +12,7 @@ use pyo3_stub_gen::{define_stub_info_gatherer, derive::{gen_stub_pyclass, gen_st
 #[gen_stub_pyclass]
 #[pyclass(frozen)]
 pub struct History {
-    history: ::line_history::history::OwnedHistory,
+    history: ::line_history_rs::history::OwnedHistory,
 }
 
 #[gen_stub_pymethods]
@@ -26,14 +27,14 @@ impl History {
             });
 
         History {
-            history: ::line_history::history::History::new(days.collect()).into_owned(),
+            history: ::line_history_rs::history::History::new(days.collect()).into_owned(),
         }
     }
 
     #[staticmethod]
     pub fn read_from_file(path: String) -> Self {
-        ::line_history::read_from_file!(path,  let src, let history);
-        let history = ::line_history::history::ignore_errors(history);
+        ::line_history_rs::read_from_file!(path,  let src, let history);
+        let history = ::line_history_rs::history::ignore_errors(history);
 
         Self { history: history.into() }
     }
@@ -41,7 +42,7 @@ impl History {
     #[staticmethod]
     pub fn from_text(text: String) -> Self {
         Self {
-            history: ::line_history::history::History::from_text(&text).into_owned(),
+            history: ::line_history_rs::history::History::from_text(&text).into_owned(),
         }
     }
 
@@ -54,7 +55,7 @@ impl History {
     pub fn search_by_keyword(&self, keyword: &str) -> Vec<(NaiveDate, Chat)> {
         self.history
             .search_by_keyword(keyword)
-            .map(|(date, owned_chat)| (date, Chat::from(owned_chat.clone())))
+            .map(|SearchByKeywordResult { date, chat, .. }| (date, Chat::from(chat.clone())))
             .collect()
     }
 
@@ -83,17 +84,17 @@ impl History {
 #[gen_stub_pyclass]
 #[pyclass(frozen)]
 pub struct Day {
-    day: ::line_history::history::OwnedDay,
+    day: ::line_history_rs::history::OwnedDay,
 }
 
-impl From<Day> for ::line_history::history::OwnedDay {
+impl From<Day> for ::line_history_rs::history::OwnedDay {
     fn from(value: Day) -> Self {
         value.day
     }
 }
 
-impl From<::line_history::history::OwnedDay> for Day {
-    fn from(owned_day: ::line_history::history::OwnedDay) -> Self {
+impl From<::line_history_rs::history::OwnedDay> for Day {
+    fn from(owned_day: ::line_history_rs::history::OwnedDay) -> Self {
         Day {
             day: owned_day,
         }
@@ -115,14 +116,14 @@ impl Day {
     }
 
     pub fn search_by_keyword(&self, keyword: &str) -> Vec<(NaiveDate, Chat)> {
-        self.day.search_by_keyword(keyword).map(|(date, owned_chat)| (date, Chat::from(owned_chat.clone()))).collect()
+        self.day.search_by_keyword(keyword).map(|SearchByKeywordResult { date, chat, .. }| (date, Chat::from(chat.clone()))).collect()
     }
 }
 
 #[gen_stub_pyclass]
 #[pyclass(frozen)]
 pub struct Chat {
-    chat: ::line_history::history::OwnedChat,
+    chat: ::line_history_rs::history::OwnedChat,
 }
 
 impl From<OwnedChat> for Chat {

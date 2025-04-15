@@ -5,15 +5,16 @@ edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 [lib]
-name = "line_history_py"
+name = "line_history"
 crate-type = ["cdylib", "rlib"]
 
 [dependencies]
-chrono = "0.4.39"
-line-history = { git = "https://github.com/TyomoGit/line-history-rs.git", version = "0.13.0" }
-pyo3 = { version = "0.23.5", features = ["chrono"] }
+chrono = "0.4.40"
+pyo3 = { version = "0.24.1", features = ["chrono"] }
 pyo3-stub-gen = "0.7.0"
 
-[[bin]]
-name = "gen_stub"
-doc = false
+[dependencies.line-history-rs]
+package = "line-history"
+git = "https://github.com/TyomoGit/line-history-rs.git"
+version = "0.16.0"
+

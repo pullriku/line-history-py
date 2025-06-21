@@ -1,18 +1,16 @@
-[build-system]
-requires = ["maturin>=1.6,<2.0"]
-build-backend = "maturin"
-
 [project]
 name = "line_history"
-requires-python = ">=3.8"
-classifiers = [
-    "Programming Language :: Rust",
-    "Programming Language :: Python :: Implementation :: CPython",
-    "Programming Language :: Python :: Implementation :: PyPy",
+version = "0.2.0"
+description = "LINE history parser"
+readme = "README.md"
+authors = [
+    { name = "pullriku", email = "riku3dno.1@gmail.com" }
 ]
-dynamic = ["version"]
-[tool.maturin]
-features = ["pyo3/extension-module"]
+requires-python = ">=3.12"
+dependencies = [
+    "polars>=1.31.0",
+]
 
-[tool.uv]
-cache-keys = [{file = "pyproject.toml"}, {file = "rust/Cargo.toml"}, {file = "**/*.rs"}]
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"

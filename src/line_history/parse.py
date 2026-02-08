@@ -78,7 +78,10 @@ class Parser:
             date_match = match_date(line)
 
             # 日付の行
-            if date_match:
+            if date_match and (
+                not self.current_date
+                or (self.current_date and date_match > self.current_date)
+            ):
                 self.current_date = date_match
                 continue
 

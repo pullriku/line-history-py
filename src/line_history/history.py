@@ -128,5 +128,5 @@ class History:
 
         return (Chat(**row) for row in result)
 
-    def get_lazy_df(self):
+    def get_lazy_df(self) -> polars.LazyFrame:
         return self.lazy_df

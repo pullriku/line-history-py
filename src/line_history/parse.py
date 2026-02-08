@@ -95,9 +95,7 @@ class Parser:
                 if self.current_entry:
                     yield self.finalize(self.current_entry)
 
-                time, speaker, message = typing.cast(
-                    typing.Tuple[datetime.time, str, str], chat_match
-                )
+                time, speaker, message = chat_match
 
                 self.current_entry = HistoryEntry(
                     timestamp=datetime.datetime.combine(self.current_date, time),
